@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: forsys-sql
+  name: forsys-agent
   namespace: biodiversity
   labels:
-    app: forsys-sql
+    app: forsys-agent
 spec:
   replicas: 1
   strategy:
@@ -14,11 +14,11 @@ spec:
       maxSurge: 1
   selector:
     matchLabels:
-      app: forsys-sql
+      app: forsys-agent
   template:
     metadata:
       labels:
-        app: forsys-sql
+        app: forsys-agent
     spec:
       initContainers:
       - name: git-clone
@@ -29,7 +29,7 @@ spec:
         - |
           # Clone the app repo. NOTE: create this repo on GitHub before the
           # first deploy — the init container has no fallback if the clone fails.
-          git clone --depth 1 https://github.com/boettiger-lab/forsys-sql.git /tmp/repo
+          git clone --depth 1 https://github.com/SchmidtDSE/forsys-agent.git /tmp/repo
           cp /tmp/repo/index.html /usr/share/nginx/html/
           cp /tmp/repo/layers-input.json /usr/share/nginx/html/
           cp /tmp/repo/system-prompt.md /usr/share/nginx/html/
@@ -112,9 +112,9 @@ spec:
         emptyDir: {}
       - name: config-template
         configMap:
-          name: forsys-sql-config
+          name: forsys-agent-config
       - name: nginx-template
         configMap:
-          name: forsys-sql-nginx
+          name: forsys-agent-nginx
       - name: nginx-conf-d
         emptyDir: {}

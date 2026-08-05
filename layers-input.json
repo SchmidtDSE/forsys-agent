@@ -9,7 +9,7 @@
     "sidebar": { "enabled": true, "chat_title": "Planning assistant" },
     "view": { "center": [-120.6, 39.4], "zoom": 8 },
     "links": {
-        "github": "https://github.com/boettiger-lab/forsys-sql",
+        "github": "https://github.com/SchmidtDSE/forsys-agent",
         "docs": "about.html",
         "carbon": true
     },

@@ -1,13 +1,13 @@
 # LLM config template — NO SECRETS.
 #
 # The upstream LLM proxy key lives only in the nginx config (see
-# `forsys-sql-nginx` below), which injects the Authorization header
+# `forsys-agent-nginx` below), which injects the Authorization header
 # server-side via `proxy_set_header`. The browser only sees a relative
 # `/api/llm` endpoint and never holds the key.
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: forsys-sql-config
+  name: forsys-agent-config
   namespace: biodiversity
 data:
   config.template.json: |
@@ -97,7 +97,7 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: forsys-sql-nginx
+  name: forsys-agent-nginx
   namespace: biodiversity
 data:
   nginx.conf.template: |

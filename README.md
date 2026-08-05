@@ -1,4 +1,4 @@
-# forsys-sql
+# forsys-agent
 
 **A proof of principle: the ForSys greedy spatial heuristic, executed as DuckDB SQL over an H3 hex grid.**
 

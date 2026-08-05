@@ -1,4 +1,4 @@
-# AI Agent Guide — forsys-sql
+# AI Agent Guide — forsys-agent
 
 A [geo-agent](https://github.com/boettiger-lab/geo-agent) client app. **Do not write JavaScript
 here** — the map, chat, agent and tool modules load from the geo-agent CDN. This repo is
