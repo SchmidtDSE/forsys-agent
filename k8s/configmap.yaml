@@ -1,0 +1,166 @@
+# LLM config template — NO SECRETS.
+#
+# The upstream LLM proxy key lives only in the nginx config (see
+# `forsys-sql-nginx` below), which injects the Authorization header
+# server-side via `proxy_set_header`. The browser only sees a relative
+# `/api/llm` endpoint and never holds the key.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: forsys-sql-config
+  namespace: biodiversity
+data:
+  config.template.json: |
+    {
+        "mcp_server_url": "${MCP_SERVER_URL}",
+        "llm_model": "qwen",
+        "transcription_model": {
+            "value": "gemma-4-e4b",
+            "endpoint": "/api/llm",
+            "api_key": "unused"
+        },
+        "llm_models": [
+            {
+                "value": "gemma",
+                "label": "NRP Gemma",
+                "endpoint": "/api/llm",
+                "api_key": "unused"
+            },
+            {
+                "value": "qwen",
+                "label": "DSE-nimbus",
+                "endpoint": "/api/llm",
+                "api_key": "unused"
+            },
+            {
+                "value": "glm-5",
+                "label": "NRP GLM-5.2",
+                "endpoint": "/api/llm",
+                "api_key": "unused"
+            },
+            {
+                "value": "z-ai/glm-5.2",
+                "label": "GLM-5.2 (OpenRouter)",
+                "endpoint": "/api/llm",
+                "api_key": "unused"
+            },
+            {
+                "value": "~deepseek/deepseek-v4-flash-latest",
+                "label": "DeepSeek V4 Flash Latest (OpenRouter)",
+                "endpoint": "/api/llm",
+                "api_key": "unused"
+            },
+            {
+                "value": "google/gemini-3.5-flash-lite",
+                "label": "Gemini 3.5 Flash Lite (OpenRouter)",
+                "endpoint": "/api/llm",
+                "api_key": "unused"
+            },
+            {
+                "value": "qwen3",
+                "label": "NRP Qwen3",
+                "endpoint": "/api/llm",
+                "api_key": "unused"
+            },
+            {
+                "value": "qwen3-small",
+                "label": "NRP Qwen3 Small",
+                "endpoint": "/api/llm",
+                "api_key": "unused"
+            },
+            {
+                "value": "gpt-oss",
+                "label": "NRP GPT-OSS 120B",
+                "endpoint": "/api/llm",
+                "api_key": "unused"
+            },
+            {
+                "value": "kimi",
+                "label": "NRP Kimi K2.5",
+                "endpoint": "/api/llm",
+                "api_key": "unused"
+            },
+            {
+                "value": "minimax-m2",
+                "label": "NRP minimax-m2",
+                "endpoint": "/api/llm",
+                "api_key": "unused"
+            }
+        ]
+    }
+
+---
+# Nginx configuration — reverse-proxies /api/llm/ to open-llm-proxy and
+# injects the Authorization header from ${PROXY_KEY} at container start
+# (the startup command runs envsubst over this file). The browser never
+# receives the key.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: forsys-sql-nginx
+  namespace: biodiversity
+data:
+  nginx.conf.template: |
+    server {
+        listen 80;
+        server_name _;
+
+        root /usr/share/nginx/html;
+        index index.html;
+
+        add_header Access-Control-Allow-Origin *;
+        add_header Access-Control-Allow-Methods "GET, POST, OPTIONS";
+        add_header Access-Control-Allow-Headers "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Accept";
+
+        # ── Reverse proxy to open-llm-proxy ──────────────────────────
+        # Clients POST to /api/llm/chat/completions with a dummy bearer
+        # token; nginx rewrites the Authorization header using the
+        # ${PROXY_KEY} substituted in at container startup. The browser
+        # never receives the key.
+        #
+        # In-cluster upstream (geo-agent-ops#73): proxy the open-llm-proxy
+        # ClusterIP service directly over HTTP inside the cluster, NOT its
+        # public hostname (open-llm-proxy.nrp-nautilus.io). Routing through the
+        # public ingress exposed the app to NRP's heterogeneous edge: nginx
+        # latched onto a single flapping anycast VIP and hard-failed ~12% of
+        # /api/llm connects (502/504 "while connecting to upstream") for a
+        # resolver window — invisible in the proxy logs because the request
+        # died here, at the app's nginx, before reaching the proxy. It also
+        # subsumes the earlier IPv6-unreachable failure the #64 IPv4-forcing
+        # block worked around: an in-cluster ClusterIP is IPv4 and single-VIP,
+        # so both failure modes disappear. The Origin header still forwards by
+        # default, so proxy logging/routing is unchanged.
+        #
+        # Cross-namespace apps (e.g. schmidtdse) use this same FQDN; the
+        # ClusterIP is reachable cluster-wide. The service lives only in the
+        # biodiversity namespace: ClusterIP open-llm-proxy:8002 (http).
+        location /api/llm/ {
+            proxy_pass http://open-llm-proxy.biodiversity.svc.cluster.local:8002/v1/;
+            proxy_set_header Authorization "Bearer ${PROXY_KEY}";
+
+            # Allow long agent loops (multi-turn tool use). 600s keeps the
+            # timeout uniform across the whole chain: the geo-agent client
+            # defaults to 600s (app/agent.js _llmTimeoutMs) and open-llm-proxy's
+            # httpx timeout is 600s, so this sidecar was the odd hop at 300s —
+            # cutting off slow-decode models (e.g. glm-5.2) the rest of the
+            # chain would still wait for.
+            proxy_read_timeout 600s;
+            proxy_send_timeout 600s;
+
+            # Don't buffer streaming responses
+            proxy_buffering off;
+        }
+
+        location / {
+            try_files $uri $uri/ /index.html;
+            add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0";
+            add_header Pragma "no-cache";
+            add_header Expires "0";
+        }
+
+        location /health {
+            access_log off;
+            return 200 "healthy\n";
+            add_header Content-Type text/plain;
+        }
+    }

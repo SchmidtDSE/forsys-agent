@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About — ForSys-in-SQL</title>
+    <style>
+        :root {
+            --bg: #ffffff;
+            --fg: #1a1c1e;
+            --muted: #5b6166;
+            --rule: #e2e6e9;
+            --accent: #1B5E20;
+            --accent-soft: #f0f6f1;
+            --code-bg: #f6f8f9;
+            --code-fg: #24292f;
+            --warn-bg: #fff8e6;
+            --warn-rule: #e0a800;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #14171a;
+                --fg: #e6e9ec;
+                --muted: #9aa3ab;
+                --rule: #2b3034;
+                --accent: #7CBF83;
+                --accent-soft: #1a2320;
+                --code-bg: #1b1f23;
+                --code-fg: #dfe4ea;
+                --warn-bg: #2a2416;
+                --warn-rule: #b38600;
+            }
+        }
+
+        :root[data-theme="dark"] {
+            --bg: #14171a;
+            --fg: #e6e9ec;
+            --muted: #9aa3ab;
+            --rule: #2b3034;
+            --accent: #7CBF83;
+            --accent-soft: #1a2320;
+            --code-bg: #1b1f23;
+            --code-fg: #dfe4ea;
+            --warn-bg: #2a2416;
+            --warn-rule: #b38600;
+        }
+
+        :root[data-theme="light"] {
+            --bg: #ffffff;
+            --fg: #1a1c1e;
+            --muted: #5b6166;
+            --rule: #e2e6e9;
+            --accent: #1B5E20;
+            --accent-soft: #f0f6f1;
+            --code-bg: #f6f8f9;
+            --code-fg: #24292f;
+            --warn-bg: #fff8e6;
+            --warn-rule: #e0a800;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--fg);
+            font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .wrap { max-width: 54rem; margin: 0 auto; padding: 3rem 1.25rem 6rem; }
+
+        h1 { font-size: 1.9rem; line-height: 1.2; margin: 0 0 .4rem; letter-spacing: -.01em; }
+        h2 {
+            font-size: 1.25rem; margin: 3rem 0 .9rem; padding-top: 1.4rem;
+            border-top: 1px solid var(--rule); letter-spacing: -.005em;
+        }
+        h3 { font-size: 1.02rem; margin: 2rem 0 .5rem; color: var(--accent); }
+
+        .lede { font-size: 1.08rem; color: var(--muted); margin: 0 0 1.5rem; }
+
+        p, ul, ol { margin: 0 0 1rem; }
+        li { margin-bottom: .35rem; }
+
+        a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; }
+        a:hover { border-bottom-color: var(--accent); }
+
+        code {
+            font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+            font-size: .875em; background: var(--code-bg); padding: .12em .35em; border-radius: 3px;
+        }
+
+        pre {
+            background: var(--code-bg); color: var(--code-fg);
+            padding: 1rem 1.1rem; border-radius: 6px; border: 1px solid var(--rule);
+            overflow-x: auto; margin: 0 0 1.2rem;
+        }
+        pre code { background: none; padding: 0; font-size: .82rem; line-height: 1.6; }
+
+        .table-scroll { overflow-x: auto; margin: 0 0 1.4rem; }
+        table { border-collapse: collapse; width: 100%; font-size: .9rem; min-width: 34rem; }
+        th, td { text-align: left; padding: .55rem .7rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+        th { font-weight: 600; color: var(--muted); font-size: .82rem; text-transform: uppercase; letter-spacing: .04em; }
+        td code { font-size: .82em; }
+
+        .callout {
+            background: var(--accent-soft); border-left: 3px solid var(--accent);
+            padding: .9rem 1.1rem; border-radius: 0 5px 5px 0; margin: 0 0 1.4rem;
+        }
+        .callout p:last-child { margin-bottom: 0; }
+
+        .warn { background: var(--warn-bg); border-left-color: var(--warn-rule); }
+
+        .funnel { display: flex; flex-wrap: wrap; gap: .5rem; margin: 0 0 1.4rem; }
+        .funnel div {
+            flex: 1 1 8rem; background: var(--code-bg); border: 1px solid var(--rule);
+            border-radius: 5px; padding: .7rem .8rem;
+        }
+        .funnel .n { font-size: 1.35rem; font-weight: 650; color: var(--accent); line-height: 1.1; }
+        .funnel .l { font-size: .76rem; color: var(--muted); margin-top: .2rem; }
+
+        .back { display: inline-block; margin-bottom: 2rem; font-size: .9rem; }
+        footer { margin-top: 3.5rem; padding-top: 1.4rem; border-top: 1px solid var(--rule); font-size: .85rem; color: var(--muted); }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <a class="back" href="index.html">&larr; Back to the map</a>
+
+        <h1>ForSys-in-SQL</h1>
+        <p class="lede">
+            The ForSys greedy spatial heuristic for fuel-treatment and restoration planning,
+            executed entirely as DuckDB SQL over an H3 hex grid on cloud parquet. No solver, no
+            R runtime, no preprocessed adjacency table.
+        </p>
+
+        <h2>What ForSys is, and why this is possible</h2>
+
+        <p>
+            <a href="https://www.forsysplanning.org/">ForSys</a> is the US Forest Service's spatial
+            planning platform for landscape restoration and fuel management. It ingests management
+            priorities, treatment thresholds and operational constraints, and returns ranked,
+            spatially explicit project areas — "the areas of the landscape that should be targeted
+            for treatment first."
+        </p>
+
+        <p>
+            The decisive design fact is that ForSys optimizes with
+            <em>"a relatively simple greedy spatial heuristic instead of more complicated mathematical
+            programming approaches used in many other planning systems."</em> That is what makes it
+            portable to an architecture like ours. Mixed-integer programming would not be: it needs a
+            solver process holding the entire problem in memory, and a branch-and-bound tree cannot be
+            pushed down into a parquet scan. A greedy heuristic needs neither. Every stage of it is an
+            aggregation or a graph expansion, and those are things a database does natively.
+        </p>
+
+        <p>
+            Two properties of an H3 hex grid make the port easier here than in ForSys itself:
+        </p>
+
+        <ul>
+            <li>
+                <strong>Adjacency is free and analytic.</strong> ForSys's patch builder
+                (<a href="https://github.com/forsys-sp/patchmax">Patchmax</a>) must derive a stand
+                adjacency graph from polygon topology. On H3, <code>h3_grid_disk</code> <em>is</em> the
+                graph and <code>h3_grid_distance</code> <em>is</em> the metric — computed from the cell
+                index, with no topology step and no stored edge list.
+            </li>
+            <li>
+                <strong>Hexagons are already a supported decision unit.</strong> ForSys selects
+                "treatment units within the planning area, such as delineated forest stands or a
+                standardized decision unit like hexagons." We use the second option, which is also this
+                catalog's standard join key.
+            </li>
+        </ul>
+
+        <h2>How the algorithm maps onto SQL</h2>
+
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr><th>ForSys concept</th><th>SQL / H3 implementation</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Treatment unit (stand)</td>
+                        <td>One H3 cell. Resolution 8 ≈ 182 acres ≈ 74 ha is the default; resolution 9 ≈ 26 acres for finer units.</td>
+                    </tr>
+                    <tr>
+                        <td>Priority layer</td>
+                        <td>A CTE aggregating one dataset to <code>h8</code>, normalized to 0–1 with <code>MAX(x) OVER ()</code> inside the planning area.</td>
+                    </tr>
+                    <tr>
+                        <td>Objective weighting</td>
+                        <td>A weighted sum of the normalized priority columns. Re-running with different weights is the tradeoff analysis.</td>
+                    </tr>
+                    <tr>
+                        <td>Treatment threshold</td>
+                        <td>A <code>WHERE</code> clause on the unit's own attributes. Patchmax's <code>threshold = 't1 == 1'</code> is literally a filter string.</td>
+                    </tr>
+                    <tr>
+                        <td>Restricted / excluded area</td>
+                        <td>An anti-join: <code>h8 NOT IN (SELECT h8 FROM wilderness)</code>.</td>
+                    </tr>
+                    <tr>
+                        <td>Stand adjacency graph</td>
+                        <td><code>h3_grid_disk(cell, 1)</code> — computed, never stored.</td>
+                    </tr>
+                    <tr>
+                        <td>Contiguous project area</td>
+                        <td>A k-ring around a seed: <code>h3_grid_disk(seed, k)</code>. k=1 → 7 cells, k=2 → 19, k=3 → 37.</td>
+                    </tr>
+                    <tr>
+                        <td><code>area_max</code> constraint</td>
+                        <td>The choice of k. At resolution 8, k=2 → 19 × 182 ≈ 3,460 acres.</td>
+                    </tr>
+                    <tr>
+                        <td>Seed search ("score each stand as a potential seed")</td>
+                        <td>A moving-window aggregation: <code>CROSS JOIN UNNEST(h3_grid_disk(seed, k))</code> then <code>GROUP BY seed</code>. Every candidate scored in one pass.</td>
+                    </tr>
+                    <tr>
+                        <td>Constraint violation stops patch growth</td>
+                        <td><code>HAVING COUNT(*) = &lt;ring size&gt;</code> — rejects any project area containing an ineligible cell.</td>
+                    </tr>
+                    <tr>
+                        <td>Sequential project selection, excluding already-claimed stands</td>
+                        <td>Recursive CTE carrying claimed seeds as a list; reject candidates within <code>2k</code> grid steps.</td>
+                    </tr>
+                    <tr>
+                        <td>Project prioritization map / ranked plan</td>
+                        <td>The recursion's iteration number is the project rank.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>Stage 1 — Scope the partitions</h2>
+
+        <p>
+            Every hex dataset in the catalog is hive-partitioned by <code>h0</code> (H3 resolution 0).
+            Establishing the <code>h0</code> set first, and carrying it into every subsequent join, is
+            what keeps the query from opening every partition file on S3. This is the single largest
+            performance lever in this architecture — an order of magnitude, not a few percent.
+        </p>
+
+        <pre><code>WITH RECURSIVE scope AS (
+  SELECT DISTINCT UNNEST(h3_grid_disk(h3_latlng_to_cell(lat, lng, 0), 1)) AS h0
+  FROM (VALUES (39.3,-120.5),(39.5,-121.0),(39.0,-120.2)) AS t(lat,lng)
+)</code></pre>
+
+        <div class="callout warn">
+            <p>
+                <strong>Every join between two hex datasets must include <code>h0</code>:</strong>
+                <code>ON a.h8 = b.h8 AND a.h0 = b.h0</code>. With <code>h0</code> in the join condition,
+                DuckDB's dynamic partition pruning matches it against the hive partition path and skips
+                non-matching files before reading them. Join on <code>h8</code> alone and it can only
+                use row-group statistics, which requires opening every file for a footer read — roughly
+                100&nbsp;ms each over HTTP.
+            </p>
+        </div>
+
+        <h2>Stage 2 — Treatment units</h2>
+
+        <p>
+            The planning area becomes one row per H3 cell. <code>DISTINCT</code> matters: PAD-US
+            features overlap, so a cell can appear more than once.
+        </p>
+
+        <pre><code>units AS (
+  SELECT DISTINCT h8, h0
+  FROM read_parquet('s3://public-padus/padus-4-1/fee/hex/h0=*/data_0.parquet')
+  WHERE h0 IN (SELECT h0 FROM scope)
+    AND Des_Tp = 'NF' AND Unit_Nm = 'Tahoe National Forest'
+)</code></pre>
+
+        <h2>Stage 3 — Priorities</h2>
+
+        <p>
+            Each management objective becomes one CTE aggregating a dataset to <code>h8</code>. Three
+            are wired up by default, and each illustrates a different aggregation discipline.
+        </p>
+
+        <h3>Fuel hazard — fractional coverage</h3>
+
+        <p>
+            Conifer share of mapped area, from the CWHR 13-class habitat product. The
+            <em>fractions</em> asset carries one <code>(class, frac)</code> row per class present in each
+            cell, so composition is exact and mass-conserving. The companion <em>mode</em> asset
+            collapses each cell to its dominant class and biases per-class area in both directions — it
+            is for map styling, not for area.
+        </p>
+
+        <pre><code>fuel AS (
+  SELECT c.h8,
+         SUM(CASE WHEN c.whr13num IN (31,32) THEN c.frac ELSE 0 END)
+           / NULLIF(SUM(c.frac), 0) AS conifer_frac
+  FROM units u
+  JOIN read_parquet('s3://public-ca30x30/cwhr13/hex-fractions/h0=*/data_0.parquet') c
+    ON c.h8 = u.h8 AND c.h0 = u.h0
+  GROUP BY c.h8
+)</code></pre>
+
+        <h3>Irrecoverable carbon — raster hex, safe to SUM</h3>
+
+        <p>
+            The carbon hex is raster-derived: exactly one row per resolution-9 cell, holding a total in
+            Mg&nbsp;C already area-integrated from the source density. Summing it up to
+            <code>h8</code> is directly valid, with no deduplication.
+        </p>
+
+        <pre><code>carbon AS (
+  SELECT k.h8, SUM(k.carbon) AS carbon_mg
+  FROM units u
+  JOIN read_parquet('s3://public-carbon/irrecoverable-carbon-2024/hex/h0=*/data_0.parquet') k
+    ON k.h8 = u.h8 AND k.h0 = u.h0
+  GROUP BY k.h8
+)</code></pre>
+
+        <h3>Community exposure — the moving window</h3>
+
+        <p>
+            This is the stage that most needs H3. A treatment unit's value for community protection
+            depends on what is <em>near</em> it, not what is in it: national-forest cells are
+            overwhelmingly uninhabited, so a per-cell housing measure would score the entire planning
+            area at zero. "Exposure within k rings" is a self-join over
+            <code>h3_grid_disk</code> — a moving-window aggregation, entirely set-at-a-time.
+        </p>
+
+        <pre><code>wui AS (
+  SELECT h8, AVG(HUDEN2020) AS hu_den
+  FROM read_parquet('s3://public-wui/wui-2020/hex/h0=*/data_0.parquet')
+  WHERE h0 IN (SELECT h0 FROM scope) AND STATE = 'CA'
+  GROUP BY h8
+),
+exposure AS (
+  SELECT u.h8, COALESCE(MAX(w.hu_den), 0) AS nbr_hu_den
+  FROM units u
+  CROSS JOIN UNNEST(h3_grid_disk(u.h8, 5)) AS r(nb)   -- ~4.6 km at res 8
+  LEFT JOIN wui w ON w.h8 = r.nb
+  GROUP BY u.h8
+)</code></pre>
+
+        <div class="callout">
+            <p>
+                <strong>Why <code>HUDEN2020</code> and not <code>HU2020</code>.</strong> On a vector hex
+                asset, per-feature totals are repeated on every cell the feature covers — a census block
+                spanning 40 cells writes its housing count 40 times. Summing that inflates the answer.
+                <code>HUDEN2020</code> is a <em>density</em>, so averaging and taking a maximum are both
+                safe with no <code>_cng_fid</code> deduplication. Prefer a density or a fraction column
+                whenever one exists.
+            </p>
+        </div>
+
+        <h2>Stage 4 — Thresholds, exclusions, weighted score</h2>
+
+        <p>
+            Thresholds screen units on their own attributes; exclusions are anti-joins. Normalization
+            uses <code>MAX(...) OVER ()</code> so the 0–1 range is relative to <em>this</em> planning
+            area — normalizing against a global maximum would flatten every score toward zero. Housing
+            density gets a <code>ln(1 + x)</code> transform because it spans four orders of magnitude
+            and would otherwise let one dense block dominate the objective.
+        </p>
+
+        <pre><code>avail AS (
+  SELECT u.h8,
+         0.40 * (ln(1 + e.nbr_hu_den) / MAX(ln(1 + e.nbr_hu_den)) OVER ())
+       + 0.35 * f.conifer_frac
+       + 0.25 * (c.carbon_mg / MAX(c.carbon_mg) OVER ()) AS score
+  FROM units u
+  JOIN fuel f     ON f.h8 = u.h8
+  JOIN exposure e ON e.h8 = u.h8
+  LEFT JOIN carbon c ON c.h8 = u.h8
+  WHERE f.conifer_frac >= 0.25                          -- treatment threshold
+    AND u.h8 NOT IN (SELECT h8 FROM wilderness)         -- exclusion
+    AND u.h8 NOT IN (SELECT h8 FROM burned)             -- exclusion
+)</code></pre>
+
+        <p>The two exclusions are ordinary scans reduced to a bare list of cells:</p>
+
+        <pre><code>wilderness AS (   -- no mechanical treatment: GAP 1 / IUCN Ib
+  SELECT DISTINCT h8 FROM read_parquet('s3://public-padus/padus-4-1/fee/hex/h0=*/data_0.parquet')
+  WHERE h0 IN (SELECT h0 FROM scope) AND (GAP_Sts = '1' OR IUCN_Cat = 'Ib')
+),
+burned AS (       -- recently burned: fuels already reduced
+  SELECT DISTINCT h8 FROM read_parquet('s3://public-fire/calfire-2025/firep/hex/h0=*/data_0.parquet')
+  WHERE h0 IN (SELECT h0 FROM scope) AND YEAR_ >= 2015
+)</code></pre>
+
+        <h2>Stage 5 — Seed scoring</h2>
+
+        <p>
+            Patchmax evaluates each stand as a potential seed, reporting "the potential objective score
+            of a patch if it were built from that location," and describes this as working like a moving
+            window. That is exactly a neighborhood aggregation, so all candidate seeds are scored in a
+            single pass rather than one search per seed.
+        </p>
+
+        <p>
+            <code>HAVING COUNT(*) = 19</code> does real constraint work: a k=2 ring has 19 cells, so a
+            seed only survives if all 19 are eligible. Any project area that would reach into
+            wilderness, a recent burn, sub-threshold vegetation, or off the forest is rejected whole.
+        </p>
+
+        <pre><code>patch AS (
+  SELECT s.h8 AS seed, SUM(a.score) AS patch_score
+  FROM avail s
+  CROSS JOIN UNNEST(h3_grid_disk(s.h8, 2)) AS r(nb)
+  JOIN avail a ON a.h8 = r.nb
+  GROUP BY s.h8
+  HAVING COUNT(*) = 19
+)</code></pre>
+
+        <h2>Stage 6 — Greedy selection, in one statement</h2>
+
+        <p>
+            Patchmax builds projects sequentially, "excluding previously recorded stands from
+            subsequent searches." With fixed-radius k-ring patches that exclusion has an exact closed
+            form: two patches overlap if and only if their seeds are within <code>2k</code> grid steps.
+            So the greedy loop becomes — take the best-scoring seed, reject every seed within
+            <code>2k</code>, repeat.
+        </p>
+
+        <p>
+            A recursive CTE carrying the claimed seeds as a list expresses this without a client-side
+            driver. The <code>LATERAL</code> subquery is what supplies the <code>ORDER BY … LIMIT 1</code>
+            that a recursive term cannot hold directly.
+        </p>
+
+        <pre><code>step AS (
+  SELECT 1 AS proj,
+         (SELECT seed FROM patch ORDER BY patch_score DESC LIMIT 1) AS seed,
+         [(SELECT seed FROM patch ORDER BY patch_score DESC LIMIT 1)] AS claimed
+  UNION ALL
+  SELECT s.proj + 1, nxt.seed, list_append(s.claimed, nxt.seed)
+  FROM step s, LATERAL (
+    SELECT p.seed FROM patch p
+    WHERE NOT EXISTS (
+      SELECT 1 FROM UNNEST(s.claimed) AS c(cs)
+      WHERE h3_grid_distance(p.seed, cs) <= 4       -- 2k, k=2
+    )
+    ORDER BY p.patch_score DESC
+    LIMIT 1
+  ) nxt
+  WHERE s.proj < 8
+)
+SELECT s.proj AS project_rank, round(p.patch_score, 2) AS patch_score,
+       h3_cell_to_lat(s.seed) AS lat, h3_cell_to_lng(s.seed) AS lng
+FROM step s JOIN patch p ON p.seed = s.seed
+ORDER BY s.proj;</code></pre>
+
+        <h2>Worked example — Tahoe National Forest</h2>
+
+        <p>
+            Run against the live catalog with weights 0.40 WUI exposure / 0.35 fuel hazard / 0.25
+            irrecoverable carbon, k=2 project areas, 8 projects:
+        </p>
+
+        <div class="funnel">
+            <div><div class="n">6,329</div><div class="l">treatment units (res 8) ≈ 1.15M acres</div></div>
+            <div><div class="n">5,753</div><div class="l">eligible after threshold + exclusions</div></div>
+            <div><div class="n">2,151</div><div class="l">valid fully-eligible seeds</div></div>
+            <div><div class="n">8</div><div class="l">non-overlapping ranked projects</div></div>
+        </div>
+
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr><th>Rank</th><th>Patch score</th><th>Lat</th><th>Lon</th><th>Acres</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>1</td><td>13.81</td><td>39.5404</td><td>−120.8350</td><td>3,458</td></tr>
+                    <tr><td>2</td><td>13.62</td><td>39.2775</td><td>−120.8800</td><td>3,458</td></tr>
+                    <tr><td>3</td><td>13.53</td><td>39.3813</td><td>−120.2110</td><td>3,458</td></tr>
+                    <tr><td>4</td><td>13.49</td><td>39.2401</td><td>−120.1010</td><td>3,458</td></tr>
+                    <tr><td>5</td><td>13.48</td><td>39.2768</td><td>−120.3910</td><td>3,458</td></tr>
+                    <tr><td>6</td><td>13.41</td><td>39.2985</td><td>−120.2150</td><td>3,458</td></tr>
+                    <tr><td>7</td><td>13.32</td><td>39.5706</td><td>−120.5870</td><td>3,458</td></tr>
+                    <tr><td>8</td><td>13.30</td><td>39.5914</td><td>−120.8050</td><td>3,458</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>
+            Scores decrease monotonically, as a greedy sequence must. The selections cluster near
+            Truckee, Nevada City–Grass Valley and Downieville — which is the behaviour a
+            WUI-weighted objective should produce, and a useful sanity check that the moving-window
+            exposure term is doing what it claims. Supporting figures from the same pipeline: 63.2%
+            of Tahoe National Forest treatment units lie within 5 hex rings (~4.6 km) of mapped WUI,
+            and mean conifer share across the forest is 0.82.
+        </p>
+
+        <h2>Datasets</h2>
+
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr><th>Role</th><th>Dataset</th><th>Source</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Planning area + wilderness exclusion</td><td><code>pad-us-4.1-fee</code></td><td>USGS Gap Analysis Project, PAD-US 4.1</td></tr>
+                    <tr><td>Recent-burn exclusion</td><td><code>calfire-2025-firep</code></td><td>CAL FIRE FRAP fire perimeters</td></tr>
+                    <tr><td>Community exposure priority</td><td><code>silvis-wui-2020</code></td><td>SILVIS Lab WUI 1990–2020 v4</td></tr>
+                    <tr><td>Fuel hazard priority</td><td><code>cwhr13</code> (fractions asset)</td><td>CAL FIRE FRAP FVEG 2022 / CWHR</td></tr>
+                    <tr><td>Carbon priority</td><td><code>irrecoverable-carbon</code></td><td>Conservation International v2 (2025), after Noon et al. 2022 — CC BY-NC 4.0</td></tr>
+                    <tr><td>Validation: actual treatments</td><td><code>facts-common-attributes-2026-06</code></td><td>USFS FACTS, EDW extract 2026-06-24</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>
+            The FACTS layer is what makes this more than a demo: it is the Forest Service's own record
+            of activities actually completed, with a <code>PURPOSE_CODE</code> identifying fuels work.
+            Asking whether the algorithm's top project areas coincide with where the agency has really
+            been treating is a genuine external check on the formulation.
+        </p>
+
+        <h2>What this does not do</h2>
+
+        <p>
+            The honest limits matter more than the capability, so they are listed plainly.
+        </p>
+
+        <ul>
+            <li>
+                <strong>No optimality guarantee.</strong> Greedy heuristics carry no bound — and neither
+                does ForSys. These are defensible, reproducible priority orderings, not optima. Anything
+                needing a provable optimum needs mixed-integer programming, which is genuinely out of
+                scope for this architecture.
+            </li>
+            <li>
+                <strong>Compact patches only.</strong> Project areas here are k-rings. Patchmax grows
+                irregular patches by Dijkstra-ordered expansion, which lets a project follow a ridgeline
+                or a fuel break. That is expressible as a recursive cost-distance relaxation over the
+                hex graph, but is not what this app does.
+            </li>
+            <li>
+                <strong>No treatment-response modelling.</strong> ForSys reports outcomes — flame-length
+                reduction, biomass produced, habitat restored. Those need treatment-effect models and
+                data this catalog does not hold. This app prioritizes <em>where</em>; it does not predict
+                <em>what treatment achieves</em>.
+            </li>
+            <li>
+                <strong>Coarse operability screening.</strong> Real plans screen on slope, yarding
+                distance and road access. Only vegetation, ownership and burn history are screened here.
+            </li>
+            <li>
+                <strong>Not a treatment prescription.</strong> Output is a prioritization score under
+                user-chosen weights. A real plan requires field verification, NEPA review and local
+                knowledge.
+            </li>
+        </ul>
+
+        <h2>References</h2>
+
+        <ul>
+            <li><a href="https://www.forsysplanning.org/">The ForSys Research Consortium</a> — and its <a href="https://www.forsysplanning.org/how-it-works">How it works</a> page</li>
+            <li><a href="https://github.com/forsys-sp/patchmax">forsys-sp/patchmax</a> — the spatial patch-selection algorithm</li>
+            <li><a href="https://github.com/forsys-sp/forsysr">forsys-sp/forsysr</a> — the R implementation of ForSys</li>
+            <li><a href="https://research.fs.usda.gov/rmrs/projects/forsys">USFS RMRS ForSys project page</a></li>
+            <li><a href="https://github.com/boettiger-lab/mcp-data-server">boettiger-lab/mcp-data-server</a> — the DuckDB/H3 MCP server this app queries</li>
+            <li><a href="https://github.com/boettiger-lab/geo-agent">boettiger-lab/geo-agent</a> — the map and agent framework</li>
+        </ul>
+
+        <footer>
+            A proof of principle from the <a href="https://www.boettigerlab.org/">Boettiger Lab</a>.
+            Not affiliated with or endorsed by the ForSys Research Consortium or the US Forest Service.
+            <a href="index.html">Back to the map</a>.
+        </footer>
+    </div>
+</body>
+
+</html>

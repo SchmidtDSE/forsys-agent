@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: forsys-sql
+  namespace: biodiversity
+  labels:
+    app: forsys-sql
+spec:
+  type: ClusterIP
+  selector:
+    app: forsys-sql
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+      name: http

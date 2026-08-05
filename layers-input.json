@@ -1,0 +1,159 @@
+{
+    "catalog": "https://s3-west.nrp-nautilus.io/public-data/stac/catalog.json",
+    "titiler_url": "https://titiler.nrp-nautilus.io",
+    "mcp_url": "https://duckdb-mcp.nrp-nautilus.io/mcp",
+    "auto_approve": true,
+    "draw_enabled": true,
+    "charts": { "enabled": true },
+    "geocoder": { "provider": "nominatim", "search_box": true },
+    "sidebar": { "enabled": true, "chat_title": "Planning assistant" },
+    "view": { "center": [-120.6, 39.4], "zoom": 8 },
+    "links": {
+        "github": "https://github.com/boettiger-lab/forsys-sql",
+        "docs": "about.html",
+        "carbon": true
+    },
+    "llm": {
+        "user_provided": true,
+        "default_endpoint": "https://openrouter.ai/api/v1",
+        "models": [
+            { "value": "anthropic/claude-sonnet-5", "label": "Claude Sonnet 5" },
+            { "value": "google/gemini-3.5-flash-lite", "label": "Gemini 3.5 Flash Lite" },
+            { "value": "z-ai/glm-5.2", "label": "GLM-5.2" },
+            { "value": "~deepseek/deepseek-v4-flash-latest", "label": "DeepSeek V4 Flash" }
+        ]
+    },
+    "welcome": {
+        "message": "This is a **proof of principle**: the ForSys greedy spatial heuristic for fuel-treatment planning, executed entirely as DuckDB SQL over an H3 hex grid. The default planning area is Tahoe National Forest (6,329 treatment units at H3 resolution 8). See **About** for how the algorithm is implemented. Try asking:",
+        "examples": [
+            "Build a 5-year fuel treatment plan for Tahoe National Forest: 8 project areas, weight WUI protection 0.4, fuel hazard 0.35, irrecoverable carbon 0.25.",
+            "How many of Tahoe National Forest's treatment units are within 5 hex rings of the wildland-urban interface?",
+            "Rerun the prioritization weighting carbon at 0.6 instead, and tell me which project areas changed.",
+            "Which of the top project areas overlap fuels treatments USFS already completed since 2015 in the FACTS record?",
+            "Compare the top 8 project areas for Tahoe vs Eldorado National Forest under the same weights."
+        ]
+    },
+    "collections": [
+        {
+            "collection_id": "pad-us-4.1-fee",
+            "collection_url": "https://s3-west.nrp-nautilus.io/public-padus/padus-4-1/fee/stac-collection.json",
+            "assets": [
+                {
+                    "id": "fee-pmtiles",
+                    "alias": "national-forests",
+                    "display_name": "National Forests (planning area)",
+                    "group": "Planning area",
+                    "visible": true,
+                    "default_style": { "fill-color": "#2E7D32", "fill-opacity": 0.18 },
+                    "outline_style": { "line-color": "#1B5E20", "line-width": 1.2 },
+                    "default_filter": ["==", ["get", "Des_Tp"], "NF"],
+                    "tooltip_fields": ["Unit_Nm", "Mang_Name", "GAP_Sts", "GIS_Acres"]
+                },
+                {
+                    "id": "fee-pmtiles",
+                    "alias": "no-treat-wilderness",
+                    "display_name": "Wilderness / GAP 1 (excluded from treatment)",
+                    "group": "Exclusions",
+                    "visible": false,
+                    "default_style": { "fill-color": "#4A148C", "fill-opacity": 0.45 },
+                    "outline_style": { "line-color": "#4A148C", "line-width": 0.8 },
+                    "default_filter": ["any",
+                        ["==", ["get", "GAP_Sts"], "1"],
+                        ["==", ["get", "IUCN_Cat"], "Ib"]
+                    ],
+                    "tooltip_fields": ["Unit_Nm", "GAP_Sts", "IUCN_Cat", "Des_Tp"]
+                }
+            ]
+        },
+        {
+            "collection_id": "calfire-2025-firep",
+            "collection_url": "https://s3-west.nrp-nautilus.io/public-fire/calfire-2025/firep/stac-collection.json",
+            "assets": [
+                {
+                    "id": "firep-pmtiles",
+                    "display_name": "Fire perimeters (recent burns excluded)",
+                    "group": "Exclusions",
+                    "visible": true,
+                    "default_style": { "fill-color": "#BF360C", "fill-opacity": 0.35 },
+                    "outline_style": { "line-color": "#BF360C", "line-width": 0.8 },
+                    "default_filter": [">=", ["get", "YEAR_"], 2015],
+                    "tooltip_fields": ["FIRE_NAME", "YEAR_", "GIS_ACRES", "AGENCY"]
+                }
+            ]
+        },
+        {
+            "collection_id": "silvis-wui-2020",
+            "collection_url": "https://s3-west.nrp-nautilus.io/public-wui/stac-collection.json",
+            "assets": [
+                {
+                    "id": "wui-2020-pmtiles",
+                    "display_name": "Wildland-Urban Interface 2020",
+                    "group": "Priorities",
+                    "visible": true,
+                    "default_style": {
+                        "fill-color": ["match", ["get", "WUICLASS2020"],
+                            ["High_Dens_Interface", "Med_Dens_Interface", "Low_Dens_Interface"], "#D84315",
+                            ["High_Dens_Intermix", "Med_Dens_Intermix", "Low_Dens_Intermix"], "#F9A825",
+                            "#BDBDBD"
+                        ],
+                        "fill-opacity": 0.6
+                    },
+                    "default_filter": ["!=", ["get", "WUIFLAG2020"], 0],
+                    "tooltip_fields": ["WUICLASS2020", "HUDEN2020", "POP2020", "STATE"],
+                    "legend_type": "categorical",
+                    "legend_classes": [
+                        { "label": "Interface WUI — housing abutting wildland", "color": "#D84315" },
+                        { "label": "Intermix WUI — housing within wildland", "color": "#F9A825" }
+                    ]
+                }
+            ]
+        },
+        {
+            "collection_id": "cwhr13",
+            "collection_url": "https://s3-west.nrp-nautilus.io/public-ca30x30/cwhr13/stac-collection.json",
+            "assets": [
+                {
+                    "id": "cwhr13-cog",
+                    "display_name": "Major habitat type (CWHR 13-class)",
+                    "group": "Priorities",
+                    "visible": false,
+                    "legend_type": "categorical"
+                }
+            ]
+        },
+        {
+            "collection_id": "irrecoverable-carbon",
+            "collection_url": "https://s3-west.nrp-nautilus.io/public-carbon/stac-collection.json",
+            "assets": [
+                {
+                    "id": "v2-irrecoverable-2024-cog",
+                    "display_name": "Irrecoverable carbon 2024 (Mg C/ha)",
+                    "group": "Priorities",
+                    "visible": false,
+                    "colormap": "viridis",
+                    "rescale": "0,150",
+                    "legend_label": "Mg C / ha"
+                }
+            ]
+        },
+        {
+            "collection_id": "facts-common-attributes-2026-06",
+            "collection_url": "https://s3-west.nrp-nautilus.io/public-facts/common-attributes-2026-06/stac-collection.json",
+            "assets": [
+                {
+                    "id": "common-attributes-2026-06-pmtiles",
+                    "display_name": "USFS FACTS fuels treatments (actual, 2015+)",
+                    "group": "Validation",
+                    "visible": false,
+                    "default_style": { "fill-color": "#00838F", "fill-opacity": 0.45 },
+                    "outline_style": { "line-color": "#006064", "line-width": 0.6 },
+                    "default_filter": ["all",
+                        ["match", ["get", "PURPOSE_CODE"], ["FUEL", "FTI", "FTM", "FTF"], true, false],
+                        [">=", ["get", "FISCAL_YEAR_COMPLETED"], 2015]
+                    ],
+                    "tooltip_fields": ["ACTIVITY", "PURPOSE_CODE", "FISCAL_YEAR_COMPLETED", "GIS_ACRES", "ADMIN_FOREST"]
+                }
+            ]
+        }
+    ]
+}
