@@ -46,7 +46,7 @@
             },
             {
                 "value": "~deepseek/deepseek-v4-flash-latest",
-                "label": "DeepSeek V4 Flash"
+                "label": "DeepSeek V4 Flash Latest"
             }
         ]
     },

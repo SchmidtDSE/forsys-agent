@@ -41,6 +41,11 @@ sync — they intentionally overlap.
 - **PMTiles carry only a subset of parquet columns.** Every `tooltip_fields` and `default_filter`
   field in `layers-input.json` was verified against the PMTiles vector-layer metadata. Verify again
   before adding one — a wrong name fails silently.
+- **A leading `~` on a model id is OpenRouter's floating alias** — `~deepseek/deepseek-v4-flash-latest`
+  "always redirects to the latest model in the DeepSeek V4 Flash family" (OpenRouter's own
+  description). All 11 tilde ids on OpenRouter end in `-latest`; pinned/dated ids carry no tilde.
+  geo-agent does not interpret the tilde — it passes the string through — so this is purely an
+  upstream convention. Keep "Latest" in the label so the floating behaviour is visible to users.
 - **No markdown in `welcome.message` or `welcome.examples`.** geo-agent renders both with
   `escapeHtml` (chat-ui.js), not through `marked` — unlike normal chat messages. Any `**bold**` shows
   up as literal asterisks. Keep the welcome text plain prose.
