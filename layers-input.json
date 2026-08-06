@@ -4,6 +4,7 @@
     "mcp_url": "https://duckdb-mcp.nrp-nautilus.io/mcp",
     "auto_approve": true,
     "draw_enabled": true,
+    "upload_enabled": true,
     "charts": { "enabled": true },
     "geocoder": { "provider": "nominatim", "search_box": true },
     "sidebar": { "enabled": true, "chat_title": "Planning assistant" },
@@ -24,10 +25,11 @@
         ]
     },
     "welcome": {
-        "message": "This is a **proof of principle**: the ForSys greedy spatial heuristic for fuel-treatment planning, executed entirely as DuckDB SQL over an H3 hex grid. The default planning area is Tahoe National Forest (6,329 treatment units at H3 resolution 8). See **About** for how the algorithm is implemented. Try asking:",
+        "message": "This is a **proof of principle**: the ForSys greedy spatial heuristic for fuel-treatment planning, executed entirely as DuckDB SQL over an H3 hex grid. Set a planning area three ways — **name** an existing polygon (a national forest, a subwatershed, a county), **draw** one with the polygon tool, or **upload** a GeoJSON. See **About** for how the algorithm is implemented. Try asking:",
         "examples": [
             "Build a 5-year fuel treatment plan for Tahoe National Forest: 8 project areas, weight WUI protection 0.4, fuel hazard 0.35, irrecoverable carbon 0.25.",
-            "How many of Tahoe National Forest's treatment units are within 5 hex rings of the wildland-urban interface?",
+            "Use the Fordyce Creek subwatershed as the planning area and rank its top 3 project areas.",
+            "I drew a polygon on the map — treat that as the planning area and prioritize within it.",
             "Rerun the prioritization weighting carbon at 0.6 instead, and tell me which project areas changed.",
             "Which of the top project areas overlap fuels treatments USFS already completed since 2015 in the FACTS record?",
             "Compare the top 8 project areas for Tahoe vs Eldorado National Forest under the same weights."
@@ -62,6 +64,21 @@
                         ["==", ["get", "IUCN_Cat"], "Ib"]
                     ],
                     "tooltip_fields": ["Unit_Nm", "GAP_Sts", "IUCN_Cat", "Des_Tp"]
+                }
+            ]
+        },
+        {
+            "collection_id": "usgs-wbd-hu12",
+            "collection_url": "https://s3-west.nrp-nautilus.io/public-usgs-wbd/wbd/hu12/stac-collection.json",
+            "assets": [
+                {
+                    "id": "hu12-pmtiles",
+                    "display_name": "HUC12 subwatersheds (nameable planning areas)",
+                    "group": "Planning area",
+                    "visible": false,
+                    "default_style": { "fill-color": "#0277BD", "fill-opacity": 0 },
+                    "outline_style": { "line-color": "#0277BD", "line-width": 1 },
+                    "tooltip_fields": ["name", "huc12", "areaacres", "states"]
                 }
             ]
         },

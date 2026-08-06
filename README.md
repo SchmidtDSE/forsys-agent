@@ -46,6 +46,74 @@ half we already had.
 
 ---
 
+## Specifying the planning area
+
+Every stage operates on a `units` table of `(h8, h0)` rows, so the only thing that differs between
+the three ways of setting a planning area is how that table gets built. Nothing downstream knows the
+difference.
+
+**A. Name an existing polygon** — cheapest and most precise, and the one to reach for first. There
+are *no geometry operations at all*: the reference dataset is already hex-indexed, so naming a
+polygon is a plain attribute filter. This is how the default Tahoe National Forest area is defined.
+
+```sql
+units AS (   -- a national forest
+  SELECT DISTINCT h8, h0 FROM read_parquet('s3://public-padus/padus-4-1/fee/hex/h0=*/data_0.parquet')
+  WHERE h0 IN (SELECT h0 FROM scope) AND Des_Tp = 'NF' AND Unit_Nm = 'Tahoe National Forest'
+)
+units AS (   -- a named subwatershed
+  SELECT DISTINCT h8, h0 FROM read_parquet('s3://public-usgs-wbd/wbd/hu12/hex/h0=*/data_0.parquet')
+  WHERE h0 IN (SELECT h0 FROM scope) AND name = 'Fordyce Creek'
+)
+```
+
+Nameable polygons in the catalog include PAD-US units (`Unit_Nm`), HUC12/HUC10 subwatersheds
+(`name`, `huc12`), counties, census places, congressional districts and ecoregions. The HUC12 layer
+is in the layer menu as an outline overlay so subwatersheds can be read off the map and named
+directly — within Tahoe NF they run ~28,000–33,000 acres each, a realistic project extent:
+
+```
+Deer Creek-North Yuba River             180201250202   32,760 ac
+Dolly Creek-Middle Fork American River  180201280302   32,032 ac
+Fordyce Creek                           180201250601   31,668 ac
+Jim Crow Creek-North Yuba River         180201250203   30,940 ac
+Rattlesnake Creek-South Yuba River      180201250602   30,394 ac
+```
+
+Because both sides are hex-indexed, named polygons **intersect** by joining on `h8 AND h0` — which
+is how most real planning questions are phrased ("the part of Tahoe NF inside this watershed").
+
+**B. A drawn polygon** — `draw_enabled: true`. The agent reads the geometry via `get_drawn_region`.
+`h0` is derived from the cells themselves, which *replaces* the usual `scope` CTE; omit it and every
+downstream join loses partition pruning.
+
+```sql
+units AS (
+  SELECT h8, h3_cell_to_parent(h8, 0) AS h0
+  FROM (SELECT UNNEST(h3_polygon_wkt_to_cells('POLYGON((...))', 8)) AS h8)
+)
+```
+
+**C. An uploaded GeoJSON** — `upload_enabled: true`, accepting `Polygon`/`MultiPolygon` only. The
+file goes browser → S3 directly (`public-output/uploads`); only the URL reaches the agent, via
+`get_uploaded_dataset`. DuckDB reads it over HTTPS; `ST_Union_Agg` collapses a multi-feature file
+into one area of interest.
+
+```sql
+units AS (
+  WITH aoi AS (SELECT ST_Union_Agg(geom) AS g FROM ST_Read('https://…/uploads/aoi.geojson'))
+  SELECT h8, h3_cell_to_parent(h8, 0) AS h0
+  FROM (SELECT UNNEST(h3_polygon_wkt_to_cells(ST_AsText((SELECT g FROM aoi)), 8)) AS h8)
+)
+```
+
+> **A drawn or uploaded polygon is not automatically treatable land.** A box dragged over Tahoe NF
+> also covers private parcels, reservoir surface and land outside the boundary. Intersect the area of
+> interest with the relevant ownership or vegetation layer before reporting acreage, and say which
+> layer was used. Path A does not have this problem — part of why it is preferred.
+
+---
+
 ## The algorithm in six stages
 
 | Stage | ForSys concept | SQL / H3 implementation |
@@ -107,6 +175,7 @@ useful check that the moving-window exposure term works. Supporting figures from
 | Community exposure priority | `silvis-wui-2020` | SILVIS Lab WUI 1990–2020 v4 |
 | Fuel hazard priority | `cwhr13` (fractions asset) | CAL FIRE FRAP FVEG 2022 / CWHR |
 | Carbon priority | `irrecoverable-carbon` | Conservation International v2 (2025) — **CC BY-NC 4.0** |
+| Nameable planning areas | `usgs-wbd-hu12` | USGS Watershed Boundary Dataset (HUC12) |
 | Validation: actual treatments | `facts-common-attributes-2026-06` | USFS FACTS, EDW 2026-06-24 |
 
 The FACTS layer is what lifts this above a demo: it is the agency's own record of completed

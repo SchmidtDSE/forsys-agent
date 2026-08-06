@@ -13,6 +13,62 @@ substituting something unrelated.
 
 The skeleton below uses `<<placeholders>>` for paths on purpose. Fill them from `get_schema`.
 
+## Specifying the planning area
+
+Three ways, in order of preference. Whichever the user gives you, the goal is identical: a `units`
+CTE of `(h8, h0)` rows. Everything downstream is unchanged.
+
+**A. Name an existing polygon — prefer this whenever it fits.** It is the cheapest and most precise
+option: no geometry operations at all, because the dataset is already hex-indexed. It is a plain
+attribute filter.
+
+```sql
+units AS (   -- a national forest
+  SELECT DISTINCT h8, h0 FROM read_parquet('<<padus_fee_hex>>')
+  WHERE h0 IN (SELECT h0 FROM scope) AND Des_Tp = 'NF' AND Unit_Nm = 'Tahoe National Forest'
+)
+units AS (   -- a named subwatershed (usgs-wbd-hu12 is native res 8, name + huc12)
+  SELECT DISTINCT h8, h0 FROM read_parquet('<<wbd_hu12_hex>>')
+  WHERE h0 IN (SELECT h0 FROM scope) AND name = 'Fordyce Creek'
+)
+```
+
+Many catalog datasets carry nameable polygons usable this way — national forests and other PAD-US
+units (`Unit_Nm`), HUC12/HUC10 subwatersheds (`name`, `huc12`), counties, census places,
+congressional districts, ecoregions. Look one up rather than asking the user for coordinates. If a
+name is ambiguous or matches nothing, list the near matches and ask — never silently pick one.
+
+Named polygons **intersect** naturally, which is how most real planning questions are phrased
+("the part of Tahoe NF inside this watershed"): join the two on `h8 AND h0`.
+
+**B. A drawn polygon.** Call `get_drawn_region` for the geometry, then hex it. Derive `h0` from the
+cells themselves — this replaces the usual `scope` CTE, and skipping it defeats partition pruning:
+
+```sql
+units AS (
+  SELECT h8, h3_cell_to_parent(h8, 0) AS h0
+  FROM (SELECT UNNEST(h3_polygon_wkt_to_cells('<<wkt_from_get_drawn_region>>', 8)) AS h8)
+)
+```
+
+**C. An uploaded GeoJSON.** Call `get_uploaded_dataset` for its URL; DuckDB reads it directly over
+HTTPS. `ST_Union_Agg` collapses a multi-feature file into one area of interest:
+
+```sql
+units AS (
+  WITH aoi AS (SELECT ST_Union_Agg(geom) AS g FROM ST_Read('<<url_from_get_uploaded_dataset>>'))
+  SELECT h8, h3_cell_to_parent(h8, 0) AS h0
+  FROM (SELECT UNNEST(h3_polygon_wkt_to_cells(ST_AsText((SELECT g FROM aoi)), 8)) AS h8)
+)
+```
+
+For B and C, an arbitrary polygon is not automatically treatable land. Intersect it with the
+ownership or vegetation layer the user cares about before reporting acreage, and say what you
+intersected — a drawn box over Tahoe NF will otherwise include private land and lake surface.
+
+Report the planning-area size in both units and acres so the user can sanity-check the extent
+before you spend a long query on it.
+
 ## The algorithm
 
 ForSys is deliberately a **greedy heuristic**, not mathematical programming. Five stages, all of

@@ -237,6 +237,104 @@
             </table>
         </div>
 
+        <h2>Specifying the planning area</h2>
+
+        <p>
+            Every stage below operates on a <code>units</code> table of <code>(h8, h0)</code> rows, so
+            the only thing that changes between the three ways of setting a planning area is how that
+            table is built. Nothing downstream is aware of the difference.
+        </p>
+
+        <h3>A. Name an existing polygon</h3>
+
+        <p>
+            The cheapest and most precise option, and the one to reach for first. There are
+            <em>no geometry operations at all</em> — the reference dataset is already hex-indexed, so
+            naming a polygon is a plain attribute filter. This is how the default Tahoe National Forest
+            planning area is defined.
+        </p>
+
+        <pre><code>units AS (   -- a national forest
+  SELECT DISTINCT h8, h0
+  FROM read_parquet('s3://public-padus/padus-4-1/fee/hex/h0=*/data_0.parquet')
+  WHERE h0 IN (SELECT h0 FROM scope)
+    AND Des_Tp = 'NF' AND Unit_Nm = 'Tahoe National Forest'
+)
+
+units AS (   -- a named subwatershed
+  SELECT DISTINCT h8, h0
+  FROM read_parquet('s3://public-usgs-wbd/wbd/hu12/hex/h0=*/data_0.parquet')
+  WHERE h0 IN (SELECT h0 FROM scope) AND name = 'Fordyce Creek'
+)</code></pre>
+
+        <p>
+            Many catalog datasets carry nameable polygons that work this way: PAD-US units
+            (<code>Unit_Nm</code>), HUC12 and HUC10 subwatersheds (<code>name</code>,
+            <code>huc12</code>), counties, census places, congressional districts and ecoregions. The
+            HUC12 layer ships in the layer menu as an outline overlay so subwatersheds can be read off
+            the map and named directly. Within Tahoe National Forest they run roughly 28,000–33,000
+            acres each — a realistic project-planning extent:
+        </p>
+
+        <div class="table-scroll">
+            <table>
+                <thead><tr><th>Subwatershed</th><th>HUC12</th><th>Acres in forest</th></tr></thead>
+                <tbody>
+                    <tr><td>Deer Creek–North Yuba River</td><td>180201250202</td><td>32,760</td></tr>
+                    <tr><td>Dolly Creek–Middle Fork American River</td><td>180201280302</td><td>32,032</td></tr>
+                    <tr><td>Fordyce Creek</td><td>180201250601</td><td>31,668</td></tr>
+                    <tr><td>Jim Crow Creek–North Yuba River</td><td>180201250203</td><td>30,940</td></tr>
+                    <tr><td>Rattlesnake Creek–South Yuba River</td><td>180201250602</td><td>30,394</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>
+            Because both sides are hex-indexed, named polygons <strong>intersect</strong> by joining on
+            <code>h8 AND h0</code> — which is how most real planning questions are actually phrased:
+            "the part of Tahoe National Forest inside this watershed."
+        </p>
+
+        <h3>B. A drawn polygon</h3>
+
+        <p>
+            The polygon draw tool is enabled, and the agent reads the geometry through its
+            <code>get_drawn_region</code> tool. <code>h3_polygon_wkt_to_cells</code> converts it to
+            treatment units. Note that <code>h0</code> comes from the cells themselves — this
+            <em>replaces</em> the usual <code>scope</code> CTE, and omitting it defeats partition
+            pruning on every join that follows.
+        </p>
+
+        <pre><code>units AS (
+  SELECT h8, h3_cell_to_parent(h8, 0) AS h0
+  FROM (SELECT UNNEST(h3_polygon_wkt_to_cells('POLYGON((...))', 8)) AS h8)
+)</code></pre>
+
+        <h3>C. An uploaded GeoJSON</h3>
+
+        <p>
+            GeoJSON upload is enabled, accepting <code>Polygon</code> and <code>MultiPolygon</code>
+            features. The file goes browser → S3 directly; only the resulting URL reaches the agent, via
+            <code>get_uploaded_dataset</code>. DuckDB then reads it straight over HTTPS, with
+            <code>ST_Union_Agg</code> collapsing a multi-feature file into a single area of interest.
+        </p>
+
+        <pre><code>units AS (
+  WITH aoi AS (SELECT ST_Union_Agg(geom) AS g FROM ST_Read('https://…/uploads/aoi.geojson'))
+  SELECT h8, h3_cell_to_parent(h8, 0) AS h0
+  FROM (SELECT UNNEST(h3_polygon_wkt_to_cells(ST_AsText((SELECT g FROM aoi)), 8)) AS h8)
+)</code></pre>
+
+        <div class="callout warn">
+            <p>
+                <strong>A drawn or uploaded polygon is not automatically treatable land.</strong> A box
+                dragged over Tahoe National Forest also covers private parcels, reservoir surface and
+                land outside the forest boundary. Intersect the area of interest with the ownership or
+                vegetation layer that matters before reporting acreage — and say which layer was used.
+                Path A does not have this problem, which is part of why it is preferred.
+            </p>
+        </div>
+
         <h2>Stage 1 — Scope the partitions</h2>
 
         <p>
@@ -505,6 +603,7 @@ ORDER BY s.proj;</code></pre>
                     <tr><td>Community exposure priority</td><td><code>silvis-wui-2020</code></td><td>SILVIS Lab WUI 1990–2020 v4</td></tr>
                     <tr><td>Fuel hazard priority</td><td><code>cwhr13</code> (fractions asset)</td><td>CAL FIRE FRAP FVEG 2022 / CWHR</td></tr>
                     <tr><td>Carbon priority</td><td><code>irrecoverable-carbon</code></td><td>Conservation International v2 (2025), after Noon et al. 2022 — CC BY-NC 4.0</td></tr>
+                    <tr><td>Nameable planning areas</td><td><code>usgs-wbd-hu12</code></td><td>USGS Watershed Boundary Dataset (HUC12)</td></tr>
                     <tr><td>Validation: actual treatments</td><td><code>facts-common-attributes-2026-06</code></td><td>USFS FACTS, EDW extract 2026-06-24</td></tr>
                 </tbody>
             </table>
