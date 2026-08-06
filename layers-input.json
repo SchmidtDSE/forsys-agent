@@ -51,7 +51,7 @@
         ]
     },
     "welcome": {
-        "message": "This is a **proof of principle**: the ForSys greedy spatial heuristic for fuel-treatment planning, executed entirely as DuckDB SQL over an H3 hex grid. Set a planning area three ways \u2014 **name** an existing polygon (a national forest, a subwatershed, a county), **draw** one with the polygon tool, or **upload** a GeoJSON. See **About** for how the algorithm is implemented. Try asking:",
+        "message": "A proof of principle: the ForSys greedy spatial heuristic for fuel-treatment planning, executed entirely as DuckDB SQL over an H3 hex grid. Set a planning area three ways \u2014 name an existing polygon (a national forest, a subwatershed, a county), draw one with the polygon tool, or upload a GeoJSON. The About link at the bottom of this panel explains how the algorithm is implemented. Try asking:",
         "examples": [
             "Build a 5-year fuel treatment plan for Tahoe National Forest: 8 project areas, weight WUI protection 0.4, fuel hazard 0.35, irrecoverable carbon 0.25.",
             "Use the Fordyce Creek subwatershed as the planning area and rank its top 3 project areas.",
