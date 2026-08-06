@@ -33,6 +33,10 @@
         "default_endpoint": "https://openrouter.ai/api/v1",
         "models": [
             {
+                "value": "~deepseek/deepseek-v4-flash-latest",
+                "label": "DeepSeek V4 Flash Latest"
+            },
+            {
                 "value": "anthropic/claude-sonnet-5",
                 "label": "Claude Sonnet 5"
             },
@@ -43,10 +47,6 @@
             {
                 "value": "z-ai/glm-5.2",
                 "label": "GLM-5.2"
-            },
-            {
-                "value": "~deepseek/deepseek-v4-flash-latest",
-                "label": "DeepSeek V4 Flash Latest"
             }
         ]
     },
