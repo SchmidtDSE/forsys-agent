@@ -5,10 +5,24 @@
     "auto_approve": true,
     "draw_enabled": true,
     "upload_enabled": true,
-    "charts": { "enabled": true },
-    "geocoder": { "provider": "nominatim", "search_box": true },
-    "sidebar": { "enabled": true, "chat_title": "Planning assistant" },
-    "view": { "center": [-120.6, 39.4], "zoom": 8 },
+    "charts": {
+        "enabled": true
+    },
+    "geocoder": {
+        "provider": "nominatim",
+        "search_box": true
+    },
+    "sidebar": {
+        "enabled": true,
+        "chat_title": "Planning assistant"
+    },
+    "view": {
+        "center": [
+            -120.6,
+            39.4
+        ],
+        "zoom": 8
+    },
     "links": {
         "github": "https://github.com/SchmidtDSE/forsys-agent",
         "docs": "about.html",
@@ -18,18 +32,30 @@
         "user_provided": true,
         "default_endpoint": "https://openrouter.ai/api/v1",
         "models": [
-            { "value": "anthropic/claude-sonnet-5", "label": "Claude Sonnet 5" },
-            { "value": "google/gemini-3.5-flash-lite", "label": "Gemini 3.5 Flash Lite" },
-            { "value": "z-ai/glm-5.2", "label": "GLM-5.2" },
-            { "value": "~deepseek/deepseek-v4-flash-latest", "label": "DeepSeek V4 Flash" }
+            {
+                "value": "anthropic/claude-sonnet-5",
+                "label": "Claude Sonnet 5"
+            },
+            {
+                "value": "google/gemini-3.5-flash-lite",
+                "label": "Gemini 3.5 Flash Lite"
+            },
+            {
+                "value": "z-ai/glm-5.2",
+                "label": "GLM-5.2"
+            },
+            {
+                "value": "~deepseek/deepseek-v4-flash-latest",
+                "label": "DeepSeek V4 Flash"
+            }
         ]
     },
     "welcome": {
-        "message": "This is a **proof of principle**: the ForSys greedy spatial heuristic for fuel-treatment planning, executed entirely as DuckDB SQL over an H3 hex grid. Set a planning area three ways — **name** an existing polygon (a national forest, a subwatershed, a county), **draw** one with the polygon tool, or **upload** a GeoJSON. See **About** for how the algorithm is implemented. Try asking:",
+        "message": "This is a **proof of principle**: the ForSys greedy spatial heuristic for fuel-treatment planning, executed entirely as DuckDB SQL over an H3 hex grid. Set a planning area three ways \u2014 **name** an existing polygon (a national forest, a subwatershed, a county), **draw** one with the polygon tool, or **upload** a GeoJSON. See **About** for how the algorithm is implemented. Try asking:",
         "examples": [
             "Build a 5-year fuel treatment plan for Tahoe National Forest: 8 project areas, weight WUI protection 0.4, fuel hazard 0.35, irrecoverable carbon 0.25.",
             "Use the Fordyce Creek subwatershed as the planning area and rank its top 3 project areas.",
-            "I drew a polygon on the map — treat that as the planning area and prioritize within it.",
+            "I drew a polygon on the map \u2014 treat that as the planning area and prioritize within it.",
             "Rerun the prioritization weighting carbon at 0.6 instead, and tell me which project areas changed.",
             "Which of the top project areas overlap fuels treatments USFS already completed since 2015 in the FACTS record?",
             "Compare the top 8 project areas for Tahoe vs Eldorado National Forest under the same weights."
@@ -43,27 +69,127 @@
                 {
                     "id": "fee-pmtiles",
                     "alias": "national-forests",
-                    "display_name": "National Forests (planning area)",
+                    "display_name": "National Forests \u2014 GAP 3 multi-use (planning area)",
                     "group": "Planning area",
                     "visible": true,
-                    "default_style": { "fill-color": "#2E7D32", "fill-opacity": 0.18 },
-                    "outline_style": { "line-color": "#1B5E20", "line-width": 1.2 },
-                    "default_filter": ["==", ["get", "Des_Tp"], "NF"],
-                    "tooltip_fields": ["Unit_Nm", "Mang_Name", "GAP_Sts", "GIS_Acres"]
+                    "default_style": {
+                        "fill-color": "#2E7D32",
+                        "fill-opacity": 0.18
+                    },
+                    "outline_style": {
+                        "line-color": "#1B5E20",
+                        "line-width": 1.2
+                    },
+                    "default_filter": [
+                        "==",
+                        [
+                            "get",
+                            "Des_Tp"
+                        ],
+                        "NF"
+                    ],
+                    "tooltip_fields": [
+                        "Unit_Nm",
+                        "Mang_Name",
+                        "GAP_Sts",
+                        "GIS_Acres"
+                    ]
+                }
+            ]
+        },
+        {
+            "collection_id": "pad-us-4.1-combined",
+            "collection_url": "https://s3-west.nrp-nautilus.io/public-padus/padus-4-1/combined/stac-collection.json",
+            "assets": [
+                {
+                    "id": "combined-pmtiles",
+                    "alias": "gap1-no-mech",
+                    "display_name": "GAP 1 / Wilderness \u2014 natural fire, no mechanical treatment",
+                    "group": "Exclusions",
+                    "visible": true,
+                    "default_style": {
+                        "fill-color": "#4A148C",
+                        "fill-opacity": 0.45
+                    },
+                    "outline_style": {
+                        "line-color": "#4A148C",
+                        "line-width": 0.8
+                    },
+                    "default_filter": [
+                        "any",
+                        [
+                            "==",
+                            [
+                                "get",
+                                "GAP_Sts"
+                            ],
+                            "1"
+                        ],
+                        [
+                            "match",
+                            [
+                                "get",
+                                "Des_Tp"
+                            ],
+                            [
+                                "WA",
+                                "SW",
+                                "RNA"
+                            ],
+                            true,
+                            false
+                        ],
+                        [
+                            "match",
+                            [
+                                "get",
+                                "IUCN_Cat"
+                            ],
+                            [
+                                "Ia",
+                                "Ib"
+                            ],
+                            true,
+                            false
+                        ]
+                    ],
+                    "tooltip_fields": [
+                        "Unit_Nm",
+                        "GAP_Sts",
+                        "Des_Tp",
+                        "IUCN_Cat",
+                        "Mang_Name"
+                    ]
                 },
                 {
-                    "id": "fee-pmtiles",
-                    "alias": "no-treat-wilderness",
-                    "display_name": "Wilderness / GAP 1 (excluded from treatment)",
+                    "id": "combined-pmtiles",
+                    "alias": "gap2-suppressed",
+                    "display_name": "GAP 2 \u2014 fire suppressed, biodiversity-primary (other owners)",
                     "group": "Exclusions",
                     "visible": false,
-                    "default_style": { "fill-color": "#4A148C", "fill-opacity": 0.45 },
-                    "outline_style": { "line-color": "#4A148C", "line-width": 0.8 },
-                    "default_filter": ["any",
-                        ["==", ["get", "GAP_Sts"], "1"],
-                        ["==", ["get", "IUCN_Cat"], "Ib"]
+                    "default_style": {
+                        "fill-color": "#00695C",
+                        "fill-opacity": 0.4
+                    },
+                    "outline_style": {
+                        "line-color": "#00695C",
+                        "line-width": 0.8
+                    },
+                    "default_filter": [
+                        "==",
+                        [
+                            "get",
+                            "GAP_Sts"
+                        ],
+                        "2"
                     ],
-                    "tooltip_fields": ["Unit_Nm", "GAP_Sts", "IUCN_Cat", "Des_Tp"]
+                    "tooltip_fields": [
+                        "Unit_Nm",
+                        "GAP_Sts",
+                        "Des_Tp",
+                        "Mang_Name",
+                        "Own_Type"
+                    ]
                 }
             ]
         },
@@ -76,9 +202,20 @@
                     "display_name": "HUC12 subwatersheds (nameable planning areas)",
                     "group": "Planning area",
                     "visible": false,
-                    "default_style": { "fill-color": "#0277BD", "fill-opacity": 0 },
-                    "outline_style": { "line-color": "#0277BD", "line-width": 1 },
-                    "tooltip_fields": ["name", "huc12", "areaacres", "states"]
+                    "default_style": {
+                        "fill-color": "#0277BD",
+                        "fill-opacity": 0
+                    },
+                    "outline_style": {
+                        "line-color": "#0277BD",
+                        "line-width": 1
+                    },
+                    "tooltip_fields": [
+                        "name",
+                        "huc12",
+                        "areaacres",
+                        "states"
+                    ]
                 }
             ]
         },
@@ -91,10 +228,28 @@
                     "display_name": "Fire perimeters (recent burns excluded)",
                     "group": "Exclusions",
                     "visible": true,
-                    "default_style": { "fill-color": "#BF360C", "fill-opacity": 0.35 },
-                    "outline_style": { "line-color": "#BF360C", "line-width": 0.8 },
-                    "default_filter": [">=", ["get", "YEAR_"], 2015],
-                    "tooltip_fields": ["FIRE_NAME", "YEAR_", "GIS_ACRES", "AGENCY"]
+                    "default_style": {
+                        "fill-color": "#BF360C",
+                        "fill-opacity": 0.35
+                    },
+                    "outline_style": {
+                        "line-color": "#BF360C",
+                        "line-width": 0.8
+                    },
+                    "default_filter": [
+                        ">=",
+                        [
+                            "get",
+                            "YEAR_"
+                        ],
+                        2015
+                    ],
+                    "tooltip_fields": [
+                        "FIRE_NAME",
+                        "YEAR_",
+                        "GIS_ACRES",
+                        "AGENCY"
+                    ]
                 }
             ]
         },
@@ -108,19 +263,52 @@
                     "group": "Priorities",
                     "visible": true,
                     "default_style": {
-                        "fill-color": ["match", ["get", "WUICLASS2020"],
-                            ["High_Dens_Interface", "Med_Dens_Interface", "Low_Dens_Interface"], "#D84315",
-                            ["High_Dens_Intermix", "Med_Dens_Intermix", "Low_Dens_Intermix"], "#F9A825",
+                        "fill-color": [
+                            "match",
+                            [
+                                "get",
+                                "WUICLASS2020"
+                            ],
+                            [
+                                "High_Dens_Interface",
+                                "Med_Dens_Interface",
+                                "Low_Dens_Interface"
+                            ],
+                            "#D84315",
+                            [
+                                "High_Dens_Intermix",
+                                "Med_Dens_Intermix",
+                                "Low_Dens_Intermix"
+                            ],
+                            "#F9A825",
                             "#BDBDBD"
                         ],
                         "fill-opacity": 0.6
                     },
-                    "default_filter": ["!=", ["get", "WUIFLAG2020"], 0],
-                    "tooltip_fields": ["WUICLASS2020", "HUDEN2020", "POP2020", "STATE"],
+                    "default_filter": [
+                        "!=",
+                        [
+                            "get",
+                            "WUIFLAG2020"
+                        ],
+                        0
+                    ],
+                    "tooltip_fields": [
+                        "WUICLASS2020",
+                        "HUDEN2020",
+                        "POP2020",
+                        "STATE"
+                    ],
                     "legend_type": "categorical",
                     "legend_classes": [
-                        { "label": "Interface WUI — housing abutting wildland", "color": "#D84315" },
-                        { "label": "Intermix WUI — housing within wildland", "color": "#F9A825" }
+                        {
+                            "label": "Interface WUI \u2014 housing abutting wildland",
+                            "color": "#D84315"
+                        },
+                        {
+                            "label": "Intermix WUI \u2014 housing within wildland",
+                            "color": "#F9A825"
+                        }
                     ]
                 }
             ]
@@ -162,13 +350,47 @@
                     "display_name": "USFS FACTS fuels treatments (actual, 2015+)",
                     "group": "Validation",
                     "visible": false,
-                    "default_style": { "fill-color": "#00838F", "fill-opacity": 0.45 },
-                    "outline_style": { "line-color": "#006064", "line-width": 0.6 },
-                    "default_filter": ["all",
-                        ["match", ["get", "PURPOSE_CODE"], ["FUEL", "FTI", "FTM", "FTF"], true, false],
-                        [">=", ["get", "FISCAL_YEAR_COMPLETED"], 2015]
+                    "default_style": {
+                        "fill-color": "#00838F",
+                        "fill-opacity": 0.45
+                    },
+                    "outline_style": {
+                        "line-color": "#006064",
+                        "line-width": 0.6
+                    },
+                    "default_filter": [
+                        "all",
+                        [
+                            "match",
+                            [
+                                "get",
+                                "PURPOSE_CODE"
+                            ],
+                            [
+                                "FUEL",
+                                "FTI",
+                                "FTM",
+                                "FTF"
+                            ],
+                            true,
+                            false
+                        ],
+                        [
+                            ">=",
+                            [
+                                "get",
+                                "FISCAL_YEAR_COMPLETED"
+                            ],
+                            2015
+                        ]
                     ],
-                    "tooltip_fields": ["ACTIVITY", "PURPOSE_CODE", "FISCAL_YEAR_COMPLETED", "GIS_ACRES", "ADMIN_FOREST"]
+                    "tooltip_fields": [
+                        "ACTIVITY",
+                        "PURPOSE_CODE",
+                        "FISCAL_YEAR_COMPLETED",
+                        "GIS_ACRES",
+                        "ADMIN_FOREST"
+                    ]
                 }
             ]
         }

@@ -108,9 +108,52 @@ units AS (
 ```
 
 > **A drawn or uploaded polygon is not automatically treatable land.** A box dragged over Tahoe NF
-> also covers private parcels, reservoir surface and land outside the boundary. Intersect the area of
-> interest with the relevant ownership or vegetation layer before reporting acreage, and say which
-> layer was used. Path A does not have this problem — part of why it is preferred.
+> also covers private parcels, reservoir surface and land outside the boundary. The next section is
+> the PAD-US screen that turns an arbitrary polygon into treatable land. Path A largely avoids the
+> problem — part of why it is preferred.
+
+---
+
+## Ownership and protection status — the PAD-US screen
+
+PAD-US answers both "who owns this" and "what treatment is permissible", which is how any area of
+interest becomes *treatable* land. **GAP status is the operative field** — it encodes the disturbance
+regime, not just ownership:
+
+| GAP | Meaning | Treatment implication |
+|---|---|---|
+| **3** | Permanent protection, multiple use, extractive use permitted | **The focal candidates.** National forests are here — Tahoe NF is uniformly GAP 3. |
+| **2** | Biodiversity primary, natural disturbance **suppressed** | Fuels accumulate precisely because fire is suppressed, but these are usually another owner's conservation lands, so mechanical treatment is not a USFS action. Excluded by default. |
+| **1** | Biodiversity primary, natural disturbance proceeds or is mimicked | Fire does the work. Designated wilderness lives here. Not a mechanical-treatment candidate. |
+| **4** | No known biodiversity mandate | Mixed; screen case by case. |
+| *absent* | Not in PAD-US at all | Almost always **private land**, plus some DoD installations. Not a federal treatment candidate — found with an anti-join against PAD-US. |
+
+For a drawn or uploaded polygon this is the concrete screen: join the AOI to PAD-US on `h8 AND h0`
+and keep GAP 3, optionally narrowing `Mang_Name` to the agency in question. Cells with no PAD-US
+match are private. Report the split — federal multi-use vs protected vs private — before quoting any
+acreage.
+
+> ### Screen on `combined`, never on `fee`
+>
+> Designations **overlay** fee ownership and are absent from the fee layer. Granite Chief Wilderness
+> — GAP 1, `Des_Tp = 'WA'`, IUCN Ib, ~27,000 acres — lies inside the Tahoe NF boundary but appears
+> only in `combined`.
+>
+> The first version of this app screened on `fee`, so the exclusion matched **zero cells** and the
+> algorithm was free to site mechanical treatment inside designated wilderness. Switching to
+> `combined` removed 569 cells and dropped one project from the top eight — the one containing the
+> Royal Gorge and Chickering American River Reserve preserves.
+
+```sql
+no_mech AS (
+  SELECT DISTINCT h8 FROM read_parquet('s3://public-padus/padus-4-1/combined/hex/h0=*/data_0.parquet')
+  WHERE h0 IN (SELECT h0 FROM scope)
+    AND (GAP_Sts IN ('1','2') OR IUCN_Cat IN ('Ia','Ib') OR Des_Tp IN ('WA','SW','RNA'))
+)
+```
+
+Whether GAP 2 is excluded is a scenario choice, not a fact — a prescribed-fire scenario might
+deliberately include it, since suppression is exactly why fuel accumulated there.
 
 ---
 
@@ -146,17 +189,18 @@ Weights 0.40 WUI exposure / 0.35 fuel hazard / 0.25 irrecoverable carbon, k=2 (1
 project areas), 8 projects, run against the live catalog:
 
 ```
-6,329 treatment units  →  5,753 eligible  →  2,151 valid seeds  →  8 ranked projects
+6,329 GAP 3 units  →  569 removed by protection screen  →  5,223 eligible
+              →  1,711 valid seeds  →  8 ranked projects
 
 rank  patch_score      lat        lon      acres
    1        13.81   39.5404  -120.8350      3458
    2        13.62   39.2775  -120.8800      3458
    3        13.53   39.3813  -120.2110      3458
    4        13.49   39.2401  -120.1010      3458
-   5        13.48   39.2768  -120.3910      3458
-   6        13.41   39.2985  -120.2150      3458
-   7        13.32   39.5706  -120.5870      3458
-   8        13.30   39.5914  -120.8050      3458
+   5        13.41   39.2985  -120.2150      3458
+   6        13.32   39.5706  -120.5870      3458
+   7        13.30   39.5914  -120.8050      3458
+   8        13.27   39.1639  -120.1810      3458
 ```
 
 Scores decrease monotonically, as a greedy sequence must. Selections cluster near Truckee, Nevada
@@ -170,7 +214,7 @@ useful check that the moving-window exposure term works. Supporting figures from
 
 | Role | Collection | Source |
 |---|---|---|
-| Planning area + wilderness exclusion | `pad-us-4.1-fee` | USGS GAP, PAD-US 4.1 |
+| Planning area (GAP 3) + protection screen | `pad-us-4.1-fee`, `pad-us-4.1-combined` | USGS GAP, PAD-US 4.1 |
 | Recent-burn exclusion | `calfire-2025-firep` | CAL FIRE FRAP |
 | Community exposure priority | `silvis-wui-2020` | SILVIS Lab WUI 1990–2020 v4 |
 | Fuel hazard priority | `cwhr13` (fractions asset) | CAL FIRE FRAP FVEG 2022 / CWHR |

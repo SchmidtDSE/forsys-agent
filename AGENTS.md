@@ -41,6 +41,12 @@ sync — they intentionally overlap.
 - **PMTiles carry only a subset of parquet columns.** Every `tooltip_fields` and `default_filter`
   field in `layers-input.json` was verified against the PMTiles vector-layer metadata. Verify again
   before adding one — a wrong name fails silently.
+- **PAD-US: screen protection status on `combined`, never on `fee`.** Designations overlay fee
+  ownership and are absent from `fee`. Granite Chief Wilderness (GAP 1, ~27k acres) sits inside Tahoe
+  NF but appears only in `combined`. The first version of this app got this wrong: the exclusion
+  matched zero cells and the algorithm would site mechanical treatment inside designated wilderness.
+  This applies to the map layers too — the `gap1-no-mech` layer is on `combined-pmtiles` for the same
+  reason. GAP 3 = focal candidates; GAP 1/2 = excluded; absent from PAD-US = private land.
 - **`h0` in every hex-to-hex join.** This is the dominant performance lever, not a micro-optimization.
   See `README.md` → Aggregation discipline.
 

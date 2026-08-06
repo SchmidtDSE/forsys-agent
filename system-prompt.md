@@ -62,12 +62,49 @@ units AS (
 )
 ```
 
-For B and C, an arbitrary polygon is not automatically treatable land. Intersect it with the
-ownership or vegetation layer the user cares about before reporting acreage, and say what you
-intersected — a drawn box over Tahoe NF will otherwise include private land and lake surface.
+For B and C, an arbitrary polygon is not automatically treatable land — a drawn box over Tahoe NF
+also covers private parcels, reservoir surface and land outside the boundary. See **Ownership and
+protection status** below for the PAD-US screen that turns any polygon into treatable land.
 
 Report the planning-area size in both units and acres so the user can sanity-check the extent
 before you spend a long query on it.
+
+## Ownership and protection status — PAD-US is the screen
+
+PAD-US answers both "who owns this" and "what treatment is permissible", so it is how any area of
+interest becomes *treatable* land. **GAP status is the operative field**, because it encodes the
+disturbance regime:
+
+| GAP | Meaning | Treatment implication |
+|---|---|---|
+| **3** | Permanent protection, multiple use, extractive use (logging, OHV) permitted | **The focal candidates.** National forests are here. |
+| **2** | Biodiversity primary, natural disturbance **suppressed** | Fuels accumulate — ecologically interesting — but usually another owner's conservation land, so mechanical treatment is not a USFS action. Excluded by default. |
+| **1** | Biodiversity primary, natural disturbance proceeds or is mimicked | Fire is allowed to do the work. Wilderness lives here. Not a mechanical-treatment candidate. |
+| **4** | No known biodiversity mandate | Mixed; screen case by case. |
+| *absent* | Not in PAD-US at all | Almost always **private land**, plus some DoD installations. Not a federal treatment candidate — identify it with an anti-join against PAD-US. |
+
+**Screen protection status on the `combined` layer, never on `fee`.** Designations overlay fee
+ownership, so they are absent from `fee`: Granite Chief Wilderness (GAP 1, ~27,000 acres) sits inside
+Tahoe National Forest but appears only in `combined`. Screening on `fee` silently excludes nothing
+and will happily site projects inside designated wilderness.
+
+```sql
+no_mech AS (
+  SELECT DISTINCT h8 FROM read_parquet('<<padus_COMBINED_hex>>')
+  WHERE h0 IN (SELECT h0 FROM scope)
+    AND (GAP_Sts IN ('1','2') OR IUCN_Cat IN ('Ia','Ib') OR Des_Tp IN ('WA','SW','RNA'))
+)
+```
+
+This is also the concrete answer for a drawn or uploaded polygon: join the area of interest to PAD-US
+on `h8 AND h0` and keep GAP 3 (optionally also filtering `Mang_Name`/`Own_Type` to the agency the
+user cares about). Cells with no PAD-US match are private. Always report the split — how much of the
+drawn area is federal multi-use, how much is protected, how much is private — before quoting an
+acreage, and never present a raw drawn-box acreage as treatable.
+
+Whether GAP 2 is excluded is a scenario choice, not a fact: a prescribed-fire scenario might
+deliberately include it, since suppression is exactly why fuel has built up there. Say which way you
+set it.
 
 ## The algorithm
 
@@ -81,8 +118,8 @@ them SQL:
    Normalize with `MAX(...) OVER ()` inside the planning area, never against a global maximum, or
    scores collapse to near-zero.
 3. **Thresholds and exclusions** — thresholds are `WHERE` clauses on the unit's own attributes
-   ("only treat where there is enough conifer to treat"). Exclusions are anti-joins against
-   restricted land (wilderness, recent burns).
+   ("only treat where there is enough conifer to treat"). Exclusions are anti-joins against land
+   where treatment is not permissible (GAP 1/2 protection, recent burns) — see below.
 4. **Project areas** — a contiguous patch grown from a seed cell. `h3_grid_disk(seed, k)` *is* the
    adjacency graph, so a compact project area is a k-ring: k=1 → 7 cells, k=2 → 19, k=3 → 37.
    `HAVING COUNT(*) = <ring size>` enforces that no excluded cell falls inside a project.
@@ -112,7 +149,7 @@ avail AS (                          -- 5. weighted score, thresholds, exclusions
   FROM units u JOIN fuel f ON f.h8 = u.h8 JOIN exposure e ON e.h8 = u.h8
   LEFT JOIN carbon c ON c.h8 = u.h8
   WHERE f.conifer_frac >= 0.25
-    AND u.h8 NOT IN (SELECT h8 FROM wilderness)
+    AND u.h8 NOT IN (SELECT h8 FROM no_mech)
     AND u.h8 NOT IN (SELECT h8 FROM burned)
 ),
 patch AS (                          -- 6. score every cell as a candidate seed
