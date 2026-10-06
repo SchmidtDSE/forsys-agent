@@ -51,6 +51,18 @@ data:
                 "api_key": "unused"
             },
             {
+                "value": "xiaomi/mimo-v2.6-pro",
+                "label": "MiMo V2.6 Pro (OpenRouter)",
+                "endpoint": "/api/llm",
+                "api_key": "unused"
+            },
+            {
+                "value": "xiaomi/mimo-v2.6-flash",
+                "label": "MiMo V2.6 Flash (OpenRouter)",
+                "endpoint": "/api/llm",
+                "api_key": "unused"
+            },
+            {
                 "value": "~google/gemini-flash-latest",
                 "label": "Gemini Flash Latest (OpenRouter)",
                 "endpoint": "/api/llm",
