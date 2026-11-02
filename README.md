@@ -5,7 +5,7 @@
 [ForSys](https://www.forsysplanning.org/) is the US Forest Service's spatial planning platform for
 landscape restoration and fuel management. This app reimplements its greedy project-building
 heuristic as SQL against cloud parquet — no solver, no R runtime, no precomputed adjacency table —
-and wraps it in a [geo-agent](https://github.com/boettiger-lab/geo-agent) map app so a planner can
+and wraps it in a [geo-agent](https://github.com/SchmidtDSE/glen) map app so a planner can
 drive it in plain language.
 
 The default planning area is **Tahoe National Forest**: 6,329 treatment units at H3 resolution 8,
@@ -255,7 +255,7 @@ k8s/                ← Kubernetes manifests (nginx + server-injected LLM key)
 ```
 
 No JavaScript here. The map, chat, agent and tool modules all load from the
-[geo-agent](https://github.com/boettiger-lab/geo-agent) CDN; this repo is configuration and
+[geo-agent](https://github.com/SchmidtDSE/glen) CDN; this repo is configuration and
 documentation only.
 
 ---
@@ -326,6 +326,6 @@ Stated plainly, because they matter more than the capability:
 - [forsys-sp/forsysr](https://github.com/forsys-sp/forsysr) — R implementation of ForSys
 - [USFS RMRS ForSys project](https://research.fs.usda.gov/rmrs/projects/forsys)
 - [boettiger-lab/mcp-data-server](https://github.com/boettiger-lab/mcp-data-server) — the DuckDB/H3 MCP server
-- [boettiger-lab/geo-agent](https://github.com/boettiger-lab/geo-agent) — map + agent framework
+- [SchmidtDSE/glen](https://github.com/SchmidtDSE/glen) — map + agent framework
 
 Not affiliated with or endorsed by the ForSys Research Consortium or the US Forest Service.
