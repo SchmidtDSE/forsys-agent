@@ -6,7 +6,7 @@ configuration and documentation only.
 
 The authoritative guide for how a client app is structured, the full `layers-input.json` schema, and
 the deployment patterns is
-[geo-agent-template/AGENTS.md](https://github.com/boettiger-lab/geo-agent-template/blob/main/AGENTS.md).
+[glen-template/AGENTS.md](https://github.com/SchmidtDSE/glen-template/blob/main/AGENTS.md).
 Read that first. Only the app-specific notes below are additional.
 
 ## What this app is
