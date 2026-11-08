@@ -63,8 +63,8 @@ spec:
         - name: PROXY_KEY
           valueFrom:
             secretKeyRef:
-              name: open-llm-proxy-secrets
-              key: proxy-key
+              name: open-llm-proxy-app-keys
+              key: forsys-agent
         command:
         - sh
         - -c
