@@ -72,14 +72,6 @@
                     "display_name": "National Forests \u2014 GAP 3 multi-use (planning area)",
                     "group": "Planning area",
                     "visible": true,
-                    "default_style": {
-                        "fill-color": "#2E7D32",
-                        "fill-opacity": 0.18
-                    },
-                    "outline_style": {
-                        "line-color": "#1B5E20",
-                        "line-width": 1.2
-                    },
                     "default_filter": [
                         "==",
                         [
@@ -202,14 +194,6 @@
                     "display_name": "HUC12 subwatersheds (nameable planning areas)",
                     "group": "Planning area",
                     "visible": false,
-                    "default_style": {
-                        "fill-color": "#0277BD",
-                        "fill-opacity": 0
-                    },
-                    "outline_style": {
-                        "line-color": "#0277BD",
-                        "line-width": 1
-                    },
                     "tooltip_fields": [
                         "name",
                         "huc12",
@@ -228,14 +212,6 @@
                     "display_name": "Fire perimeters (recent burns excluded)",
                     "group": "Exclusions",
                     "visible": true,
-                    "default_style": {
-                        "fill-color": "#BF360C",
-                        "fill-opacity": 0.35
-                    },
-                    "outline_style": {
-                        "line-color": "#BF360C",
-                        "line-width": 0.8
-                    },
                     "default_filter": [
                         ">=",
                         [
@@ -262,29 +238,6 @@
                     "display_name": "Wildland-Urban Interface 2020",
                     "group": "Priorities",
                     "visible": true,
-                    "default_style": {
-                        "fill-color": [
-                            "match",
-                            [
-                                "get",
-                                "WUICLASS2020"
-                            ],
-                            [
-                                "High_Dens_Interface",
-                                "Med_Dens_Interface",
-                                "Low_Dens_Interface"
-                            ],
-                            "#D84315",
-                            [
-                                "High_Dens_Intermix",
-                                "Med_Dens_Intermix",
-                                "Low_Dens_Intermix"
-                            ],
-                            "#F9A825",
-                            "#BDBDBD"
-                        ],
-                        "fill-opacity": 0.6
-                    },
                     "default_filter": [
                         "!=",
                         [
@@ -298,17 +251,6 @@
                         "HUDEN2020",
                         "POP2020",
                         "STATE"
-                    ],
-                    "legend_type": "categorical",
-                    "legend_classes": [
-                        {
-                            "label": "Interface WUI \u2014 housing abutting wildland",
-                            "color": "#D84315"
-                        },
-                        {
-                            "label": "Intermix WUI \u2014 housing within wildland",
-                            "color": "#F9A825"
-                        }
                     ]
                 }
             ]
@@ -350,14 +292,6 @@
                     "display_name": "USFS FACTS fuels treatments (actual, 2015+)",
                     "group": "Validation",
                     "visible": false,
-                    "default_style": {
-                        "fill-color": "#00838F",
-                        "fill-opacity": 0.45
-                    },
-                    "outline_style": {
-                        "line-color": "#006064",
-                        "line-width": 0.6
-                    },
                     "default_filter": [
                         "all",
                         [
