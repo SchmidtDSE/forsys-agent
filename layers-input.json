@@ -263,8 +263,7 @@
                     "id": "cwhr13-cog",
                     "display_name": "Major habitat type (CWHR 13-class)",
                     "group": "Priorities",
-                    "visible": false,
-                    "legend_type": "categorical"
+                    "visible": false
                 }
             ]
         },
@@ -277,8 +276,6 @@
                     "display_name": "Irrecoverable carbon 2024 (Mg C/ha)",
                     "group": "Priorities",
                     "visible": false,
-                    "colormap": "viridis",
-                    "rescale": "0,150",
                     "legend_label": "Mg C / ha"
                 }
             ]
