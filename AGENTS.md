@@ -21,7 +21,7 @@ sync — they intentionally overlap.
 
 | File | Role |
 |---|---|
-| `index.html` | Shell. CDN pinned to geo-agent **v3.25.0** (4 places). Third-party `integrity=` hashes are copied verbatim — never hand-edit one. |
+| `index.html` | Shell. Loads glen core **v4.0.0** from the CDN (4 places; the plugins in `layers-input.json` carry the same tag). Third-party `integrity=` hashes are copied verbatim — never hand-edit one. |
 | `layers-input.json` | Layers, LLM settings, welcome examples. `links.docs: "about.html"` is what renders the **About** link in the chat footer. |
 | `system-prompt.md` | The algorithm skeleton the agent executes. |
 | `about.html` | The About page — full algorithm write-up. |
