@@ -247,7 +247,7 @@ Three traps, each of which silently produces a wrong number rather than an error
 ## Repository structure
 
 ```
-index.html          ← HTML shell; core JS/CSS from CDN, pinned to geo-agent v3.25.0
+index.html          ← HTML shell; glen core JS/CSS from CDN, pinned to v4.0.0
 layers-input.json   ← map layers, LLM settings, welcome examples, links.docs → about.html
 system-prompt.md    ← the algorithm skeleton the agent executes
 about.html          ← the app's About page: full algorithm documentation
