@@ -322,17 +322,17 @@
   ],
   "plugins": [
     {
-      "url": "https://cdn.jsdelivr.net/gh/SchmidtDSE/glen@v4.0.5/core/plugins/mcp.js",
+      "url": "https://cdn.jsdelivr.net/gh/SchmidtDSE/glen@v4.0.6/core/plugins/mcp.js",
       "options": {
         "url": "https://duckdb-mcp.nrp-nautilus.io/mcp",
         "prompt": "geospatial-analyst"
       }
     },
-    "https://cdn.jsdelivr.net/gh/SchmidtDSE/glen@v4.0.5/core/plugins/hex.js",
-    "https://cdn.jsdelivr.net/gh/SchmidtDSE/glen@v4.0.5/core/plugins/charts.js",
-    "https://cdn.jsdelivr.net/gh/SchmidtDSE/glen@v4.0.5/core/plugins/draw.js",
+    "https://cdn.jsdelivr.net/gh/SchmidtDSE/glen@v4.0.6/core/plugins/hex.js",
+    "https://cdn.jsdelivr.net/gh/SchmidtDSE/glen@v4.0.6/core/plugins/charts.js",
+    "https://cdn.jsdelivr.net/gh/SchmidtDSE/glen@v4.0.6/core/plugins/draw.js",
     {
-      "url": "https://cdn.jsdelivr.net/gh/SchmidtDSE/glen@v4.0.5/core/plugins/uploads.js",
+      "url": "https://cdn.jsdelivr.net/gh/SchmidtDSE/glen@v4.0.6/core/plugins/uploads.js",
       "options": {}
     }
   ],
